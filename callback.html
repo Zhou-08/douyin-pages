@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授权回调 - 短视频AI中转服务</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f5f6fa;margin:0;padding:40px 20px;color:#333;min-height:100vh;}
+  .card{max-width:620px;margin:0 auto;background:#fff;border-radius:10px;padding:34px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+  h1{font-size:22px;color:#fe2c55;margin:0 0 8px;font-weight:600;}
+  .sub{font-size:13px;color:#888;margin:0 0 24px;}
+  .field{margin:18px 0;}
+  label{display:block;font-size:13px;color:#666;margin-bottom:8px;font-weight:500;}
+  .code-box{display:flex;align-items:center;gap:10px;}
+  input{flex:1;padding:11px 13px;border:1px solid #ddd;border-radius:5px;font-family:"Consolas",monospace;font-size:14px;background:#fafafa;color:#333;outline:none;transition:border .2s;}
+  input:focus{border-color:#fe2c55;background:#fff;}
+  button{padding:11px 20px;background:#fe2c55;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:500;transition:background .2s;}
+  button:hover{background:#e0274d;}
+  .tip{font-size:13px;color:#999;margin-top:26px;line-height:1.7;background:#fafafa;padding:14px;border-radius:5px;border-left:3px solid #fe2c55;}
+  .tip code{background:#eee;padding:1px 5px;border-radius:3px;font-size:12px;color:#d63384;}
+  .step{margin:10px 0;padding-left:8px;}
+  .step b{color:#333;}
+  .error-box{color:#fe2c55;background:#fff0f2;padding:14px;border-radius:5px;font-size:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>短视频AI中转服务</h1>
+    <p class="sub">抖音开放平台 - 授权回调页</p>
+
+    <div id="content">
+      <div class="field">
+        <label>1. 授权码（code）</label>
+        <div class="code-box">
+          <input id="code" readonly>
+          <button onclick="copyCode()">复制</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>2. 状态值（state，可选）</label>
+        <input id="state" readonly>
+      </div>
+      <div class="tip">
+        <b>下一步：用授权码换取 token</b>
+        <div class="step">复制上方的 <code>code</code>；</div>
+        <div class="step">调用抖音接口 <code>https://open.douyin.com/oauth/access_token/</code>，参数：<code>client_key</code> + <code>client_secret</code> + <code>code</code> + <code>grant_type=authorization_code</code>；</div>
+        <div class="step">返回 <code>access_token</code> / <code>refresh_token</code> / <code>open_id</code>，填入程序"服务配置"，点击启动即可。</div>
+      </div>
+    </div>
+
+    <div id="err" class="error-box" style="display:none;"></div>
+  </div>
+
+<script>
+function getQuery(name){
+  var m=new RegExp('[?&]'+name+'=([^&#]*)').exec(window.location.href);
+  return m?decodeURIComponent(m[1].replace(/\+/g,' ')):'';
+}
+var code=getQuery('code');
+var state=getQuery('state');
+if(code){
+  document.getElementById('code').value=code;
+  document.getElementById('state').value=state;
+}else{
+  document.getElementById('content').style.display='none';
+  var e=document.getElementById('err');
+  e.style.display='block';
+  var ec=getQuery('errorcode')||getQuery('error');
+  var em=getQuery('errormsg')||getQuery('error_description');
+  e.innerHTML='<b>授权失败</b><br>错误码：'+(ec||'未知')+'<br>描述：'+(em||'未获取到授权码，可能用户拒绝授权或链接配置有误。');
+}
+function copyCode(){
+  var inp=document.getElementById('code');
+  inp.select();
+  inp.setSelectionRange(0,inp.value.length);
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(inp.value).then(function(){alert('已复制授权码');},function(){fallbackCopy(inp);});
+    }else{fallbackCopy(inp);}
+  }catch(e){fallbackCopy(inp);}
+}
+function fallbackCopy(inp){
+  try{document.execCommand('copy');alert('已复制授权码');}
+  catch(e){alert('复制失败，请手动选中文本复制');}
+}
+</script>
+</body>
+</html>
